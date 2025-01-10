@@ -2,6 +2,14 @@
 
 ## Background
 
+Roadmap:
+
+- clusters: Contains cluster configurations that sets up EBS CSI Driver and Snapshot Controller add-ons `eksctl`. Should automatically setup required IAM roles too. 
+- `classes.yaml`: Adds StorageClass and VolumeSnapshotClass to your cluster
+- `statefulset.yaml`: Simple stateful workload with 2 replicas that current time to EBS volumes. Will create EBS-Backed PVCs if they do not exist on cluster already. 
+- `snapshot-create.yaml`: Creates VolumeSnapshot resources from the stateful workload's EBS volumes.
+- `snapshot-import.yaml`: Creates VolumeSnapshot resources from manually imported Snapshot ID, as well as PVCs that will restore from those snapshots. 
+
 ## Demo A: Migrating StatefulSet through EBS Snapshots
 
 ### Pre-requisites
@@ -129,4 +137,17 @@ Fri Jan 10 19:26:03 UTC 2025
 
 Make sure you cleanup all Volumes, Snapshots, and EKS clusters to avoid fees. 
 
-TODO 
+The following commands will delete all StatefulSets, volumes, and snapshots from your clusters:
+
+```
+aws eks update-kubeconfig --name ebs-demo-alpha --region us-east-1
+kubectl delete sts --all
+kubectl delete pvc --all
+kubectl delete vs --all
+aws eks update-kubeconfig --name ebs-demo-bravo --region us-east-1
+kubectl delete sts --all
+kubectl delete pvc --all
+kubectl delete vs --all
+```
+
+Check EC2 console to ensure no volumes/snapshots remain.
