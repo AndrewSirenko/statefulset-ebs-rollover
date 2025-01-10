@@ -1,0 +1,95 @@
+# Copyright 2024 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the 'License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an 'AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: static-snapshot-0
+  namespace: default 
+spec:
+  volumeSnapshotClassName: csi-aws-vsc
+  source:
+    volumeSnapshotContentName: static-snapshot-content-0
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: static-snapshot-1
+  namespace: default
+spec:
+  volumeSnapshotClassName: csi-aws-vsc
+  source:
+    volumeSnapshotContentName: static-snapshot-content-1
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotContent
+metadata:
+  name: static-snapshot-content-0
+spec:
+  volumeSnapshotRef:
+    kind: VolumeSnapshot
+    name: static-snapshot-0
+    namespace: default
+  source:
+    snapshotHandle: "snap-018748b8554664e6a" # This must be the EBS Snapshot ID found in VolumeSnapshotContent status.snapshotHandle
+  driver: ebs.csi.aws.com
+  deletionPolicy: Delete
+  volumeSnapshotClassName: csi-aws-vsc
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotContent
+metadata:
+  name: static-snapshot-content-1
+spec:
+  volumeSnapshotRef:
+    kind: VolumeSnapshot
+    name: static-snapshot-1
+    namespace: default
+  source:
+    snapshotHandle: "snap-0043c5e9068a3905b" # This must be the EBS Snapshot ID EBS Snapshot ID found in VolumeSnapshotContent status.snapshotHandle
+  driver: ebs.csi.aws.com
+  deletionPolicy: Delete
+  volumeSnapshotClassName: csi-aws-vsc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-web-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 1Gi
+  dataSource:
+    name: static-snapshot-0
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-web-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 1Gi
+  dataSource:
+    name: static-snapshot-1
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
